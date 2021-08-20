@@ -36,13 +36,27 @@ func RegisterRoutes() *gin.Engine {
 	})
 	// POST DELETE
 	r.POST("/delete", routes.DeleteUser)
+	// TODO
 
+	update := r.Group("/update")
 	// GET UPDATE
-	r.GET("/update", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "update-user.html", nil)
+	update.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "update-find.html", nil)
+	})
+	update.POST("/", func(c *gin.Context) {
+		// username := strings.TrimSpace(c.PostForm("username"))
+		c.Redirect(http.StatusOK, "/update/edit")
+		// c.HTML(http.StatusOK, "update-user.html", username)
+	})
+	// GET UPDATE
+	update.GET("/edit", func(c *gin.Context) {
+		// c.String(http.StatusOK, c.Request.Body)
+
+		// user, _ := database.FindUser(username)
+		// c.HTML(http.StatusOK, "update-user.html", user)
 	})
 	// POST UPDATE
-	r.POST("/update", routes.UpdateUser)
+	update.POST("/update", routes.UpdateUser)
 
 	r.Static("/public", "D:\\GO_Workspace\\src\\mongo_go\\public")
 	return r
