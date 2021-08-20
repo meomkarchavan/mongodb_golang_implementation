@@ -14,6 +14,10 @@ import (
 // var collection *mongo.Collection
 var ctx = context.TODO()
 
+const db = "training_db"
+
+var collection = "users"
+
 func createConnection() *mongo.Client {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017/")
 	client, err := mongo.Connect(ctx, clientOptions)
@@ -26,18 +30,18 @@ func createConnection() *mongo.Client {
 	}
 	return client
 }
-func CreateUser(user models.User) *mongo.InsertOneResult {
+func CreateUser(user models.User) (*mongo.InsertOneResult, error) {
 	client := createConnection()
-	collection := client.Database("training_db").Collection("users")
+	collection := client.Database(db).Collection(collection)
 	result, err := collection.InsertOne(ctx, user)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return result
+	return result, nil
 }
 func FindUser(username string) (models.User, error) {
 	client := createConnection()
-	collection := client.Database("training_db").Collection("users")
+	collection := client.Database(db).Collection(collection)
 
 	filter := bson.D{primitive.E{Key: "username", Value: username}}
 
@@ -50,13 +54,12 @@ func FindUser(username string) (models.User, error) {
 	return result, nil
 }
 
-func UpdateUser(username string, update primitive.D) (*mongo.UpdateResult, error) {
+func UpdateUser(user models.User) (*mongo.UpdateResult, error) {
 	client := createConnection()
-	collection := client.Database("training_db").Collection("users")
+	collection := client.Database(db).Collection(collection)
 
-	filter := bson.D{primitive.E{Key: "username", Value: username}}
-
-	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
+	filter := bson.D{primitive.E{Key: "username", Value: user.Username}}
+	updateResult, err := collection.UpdateOne(context.TODO(), filter, user)
 
 	if err != nil {
 		return nil, err
@@ -64,9 +67,9 @@ func UpdateUser(username string, update primitive.D) (*mongo.UpdateResult, error
 	return updateResult, nil
 }
 
-func DeleteUser(username string, update primitive.D) (*mongo.DeleteResult, error) {
+func DeleteUser(username string) (*mongo.DeleteResult, error) {
 	client := createConnection()
-	collection := client.Database("training_db").Collection("users")
+	collection := client.Database(db).Collection(collection)
 
 	filter := bson.D{primitive.E{Key: "username", Value: username}}
 
