@@ -7,23 +7,30 @@
     <title>Update User</title>
 </head>
 <body>
-    <form class="form-horizontal admin-employee" method="post" action="/update">
+  <div>
+    <h3>MongoDb GoLang</h3>
+    <a href="/add">Add User</a>
+    <a href="/update">Update User</a>
+    <a href="/find">Find User</a>
+    <a href="/delete">Delete User</a>
+</div>
+    <form class="form-horizontal admin-employee" method="post" action="/update/edit">
 
         <div class="row form-group">
           <label for="firstName" class="col-lg-2 control-label text-right" >First Name</label>
           <div class="col-lg-2">
-            <input type="text" id="firstName" name="firstName" class="form-control" disabled value={{.FirstName}}>
+            <input type="text" id="firstName" name="firstName" class="form-control"  value={{.FirstName}}>
           </div>
           <label for="lastName" class="col-lg-2 control-label text-right">Last Name</label>
 
           <div class="col-lg-2">
-            <input type="text" id="lastName" name="lastName" class="form-control" disabled value={{.LastName}}>
+            <input type="text" id="lastName" name="lastName" class="form-control"  value={{.LastName}}>
           </div>
         </div>
         <label for="username" class="col-lg-2 control-label text-right">UserName</label>
 
         <div class="col-lg-2">
-            <input type="text" id="username" name="username" class="form-control"  value={{.Username}}>
+            <input type="text" id="username" name="username" class="form-control" readonly value={{.Username}}>
           </div>
         </div>
         <label for="password" class="col-lg-2 control-label text-right">Password</label>

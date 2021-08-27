@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"mongo_go/src/models"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,26 +13,49 @@ import (
 )
 
 // var collection *mongo.Collection
-var ctx = context.TODO()
 
 const db = "training_db"
 
 var collection = "users"
+var url = "mongodb://localhost:27017/"
 
-func createConnection() *mongo.Client {
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017/")
+func close(client *mongo.Client, ctx context.Context,
+	cancel context.CancelFunc) {
+
+	// CancelFunc to cancel to context
+	defer cancel()
+
+	// client provides a method to close
+	// a mongoDB connection.
+	defer func() {
+
+		// client.Disconnect method also has deadline.
+		// returns error if any,
+		if err := client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+}
+
+func createConnection(url string) (*mongo.Client, context.Context,
+	context.CancelFunc, error) {
+	clientOptions := options.Client().ApplyURI(url)
+
+	ctx, cancel := context.WithTimeout(context.Background(),
+		60*time.Second)
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return client
+	return client, ctx, cancel, err
 }
 func CreateUser(user models.User) (*mongo.InsertOneResult, error) {
-	client := createConnection()
+	client, ctx, cancel, err := createConnection(url)
+	if err != nil {
+		panic(err)
+	}
+
+	defer close(client, ctx, cancel)
 	collection := client.Database(db).Collection(collection)
 	result, err := collection.InsertOne(ctx, user)
 	if err != nil {
@@ -40,14 +64,19 @@ func CreateUser(user models.User) (*mongo.InsertOneResult, error) {
 	return result, nil
 }
 func FindUser(username string) (models.User, error) {
-	client := createConnection()
+	client, ctx, cancel, err := createConnection(url)
+	if err != nil {
+		panic(err)
+	}
+
+	defer close(client, ctx, cancel)
 	collection := client.Database(db).Collection(collection)
 
 	filter := bson.D{primitive.E{Key: "username", Value: username}}
 
 	var result models.User
 
-	err := collection.FindOne(context.TODO(), filter).Decode(&result)
+	err = collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -55,11 +84,19 @@ func FindUser(username string) (models.User, error) {
 }
 
 func UpdateUser(user models.User) (*mongo.UpdateResult, error) {
-	client := createConnection()
+	client, ctx, cancel, err := createConnection(url)
+	if err != nil {
+		panic(err)
+	}
+
+	defer close(client, ctx, cancel)
 	collection := client.Database(db).Collection(collection)
 
 	filter := bson.D{primitive.E{Key: "username", Value: user.Username}}
-	updateResult, err := collection.UpdateOne(context.TODO(), filter, user)
+	update := bson.M{
+		"$set": user,
+	}
+	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
 
 	if err != nil {
 		return nil, err
@@ -68,7 +105,12 @@ func UpdateUser(user models.User) (*mongo.UpdateResult, error) {
 }
 
 func DeleteUser(username string) (*mongo.DeleteResult, error) {
-	client := createConnection()
+	client, ctx, cancel, err := createConnection(url)
+	if err != nil {
+		panic(err)
+	}
+
+	defer close(client, ctx, cancel)
 	collection := client.Database(db).Collection(collection)
 
 	filter := bson.D{primitive.E{Key: "username", Value: username}}

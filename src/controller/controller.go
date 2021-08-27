@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"mongo_go/src/database"
 	"mongo_go/src/routes"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,24 +41,29 @@ func RegisterRoutes() *gin.Engine {
 	// TODO
 
 	update := r.Group("/update")
-	// GET UPDATE
+	// GET UPDATE root to search for username
 	update.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "update-find.html", nil)
 	})
+	// POST UPDATE root to search for username
 	update.POST("/", func(c *gin.Context) {
-		// username := strings.TrimSpace(c.PostForm("username"))
-		c.Redirect(http.StatusOK, "/update/edit")
-		// c.HTML(http.StatusOK, "update-user.html", username)
+		username := strings.TrimSpace(c.PostForm("username"))
+		// c.String(http.StatusOK, "/update/edit/"+username)
+		c.Redirect(http.StatusMovedPermanently, "/update/edit/"+username)
 	})
-	// GET UPDATE
-	update.GET("/edit", func(c *gin.Context) {
-		// c.String(http.StatusOK, c.Request.Body)
-
-		// user, _ := database.FindUser(username)
-		// c.HTML(http.StatusOK, "update-user.html", user)
+	// GET UPDATE TO EDIT
+	update.GET("/edit/:username", func(c *gin.Context) {
+		username := c.Param("username")
+		// c.String(http.StatusOK, username)
+		result, err := database.FindUser(username)
+		if err != nil {
+			c.JSON(http.StatusNotFound, "No User Found")
+			return
+		}
+		c.HTML(http.StatusOK, "update-user.html", result)
 	})
-	// POST UPDATE
-	update.POST("/update", routes.UpdateUser)
+	// POST UPDATE TO EDIT
+	update.POST("/edit/", routes.UpdateUser)
 
 	r.Static("/public", "D:\\GO_Workspace\\src\\mongo_go\\public")
 	return r

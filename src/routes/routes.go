@@ -59,6 +59,11 @@ func DeleteUser(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
 	var user models.User
 	err := c.Bind(&user)
+	// user.ID = primitive.NewObjectID()
+	// c.JSON(
+	// 	http.StatusOK,
+	// 	user,
+	// )
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
